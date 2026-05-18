@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ЛИМОН | Marketplace</title>
+<link href="https://fonts.googleapis.com/css2?family=Bowlby+One+SC&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
+<noscript>
+<style>
+    #btnContainer { display: none !important; pointer-events: none !important; }
+    #mainPage { opacity: 1 !important; visibility: visible !important; }
+</style>
+</noscript>
+<style>
+:root{
+    --bg-dark:#050505;
+    --bg-main:#0a0a0f;
+    --text-main:#f0f0f0;
+    --text-muted:#888890;
+    --accent:#ffffff;
+    --border:rgba(255,255,255,0.07);
+    --card-bg:rgba(255,255,255,0.03);
+    --bezier:cubic-bezier(0.25, 1, 0.3, 1);
+    --max-idx: 18; 
+}
+*,*::before,*::after{box-sizing:border-box;}
+html,body{
+    margin:0;width:100%;min-height:100%;height:100%;
+    background:var(--bg-dark);color:var(--text-main);
+    font-family:'Roboto Condensed',sans-serif;overflow:hidden;
+}
+button, input{font:inherit;color:inherit;}
+button{cursor:pointer;}
+
+/* Стартовый контейнер */
+.container{
+    position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;gap:20px;
+    background:var(--bg-dark);transition:opacity .4s ease,visibility .4s ease;
+    pointer-events: auto;
+    padding: 0 20px;
+}
+.container.hidden{opacity:0;visibility:hidden;pointer-events:none;}
+
+/* Кнопки приветствия с умеренным закруглением */
+.btn{
+    position: relative;
+    z-index: 1001;
+    flex: 1;
+    max-width: 280px;
+    height: 70px;
+    color: var(--accent);
+    font-size: 20px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    border-radius: 8px; /* Умеренное закругление */
+    background: #111116;
+    border: 2px solid rgba(255,255,255,0.15);
+    box-shadow: 0 15px 35px rgba(0,0,0,.8);
+    opacity: 0;
+    transform: translateY(30px);
+    transition: transform .4s var(--bezier), border-color .3s, background-color .3s, box-shadow .3s, opacity .4s;
+}
+.btn:hover{
+    transform: translateY(-4px);
+    border-color: rgba(255,255,255,1);
+    background: #16161c;
+    box-shadow: 0 20px 40px rgba(255,255,255,0.05);
+}
+.btn:active{ transform: translateY(-1px); }
+.btn-site{animation:fadeUp .6s forwards .15s;}
+.btn-app{animation:fadeUp .6s forwards .3s;}
+@keyframes fadeUp{to{opacity:1;transform:translateY(0);}}
+
+/* Главная страница */
+.main-page{
+    position:relative;height:100vh;display:flex;flex-direction:column;background:var(--bg-main);
+    opacity:0;visibility:hidden;transition:opacity .5s ease,visibility .5s ease;
+}
+.main-page.visible{opacity:1;visibility:visible;}
+.grid-bg{
+    position:fixed;inset:0;z-index:-1;
+    background-image:
+        linear-gradient(rgba(255,255,255,.01) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(255,255,255,.01) 1px,transparent 1px);
+    background-size:60px 60px;
+}
+
+/* Трехколоночный Хедер с поиском */
+header{
+    flex-shrink:0;
+    height:140px; 
+    display:grid;
+    grid-template-columns: 1.2fr 1fr 1fr; /* Перераспределили пропорции под поиск */
+    align-items:center;
+    padding:0 4%;
+    border-bottom:1px solid var(--border);
+    background:rgba(10,10,15,.85);
+    backdrop-filter:blur(20px);
+    z-index:100;
+    gap: 20px;
+}
+
+.header-left { 
+    grid-column: 1; 
+    display: flex; 
+    align-items: center; 
+    justify-content: flex-start; 
+    gap: 20px;
+    width: 100%;
+}
+
+/* Компонент поиска */
+.search-container {
+    position: relative;
+    flex: 1;
+    max-width: 400px;
+}
+.search-input {
+    width: 100%;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px; /* Умеренное закругление */
+    padding: 0 16px 0 42px;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.3s, background-color 0.3s, box-shadow 0.3s;
+}
+.search-input:focus {
+    border-color: rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.03);
+}
+.search-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+    font-size: 1.1rem;
+}
+
+.logo{
+    grid-column: 2; 
+    font-family: 'Bowlby One SC', sans-serif; 
+    font-size: clamp(2.5rem, 4.5vw, 4.5rem); 
+    letter-spacing: 1.2vw; 
+    text-indent: 1.2vw; 
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    color: var(--text-main);
+    text-transform: uppercase;
+    line-height: 1;
+    text-align: center;
+    cursor: pointer;
+    white-space: nowrap;
+    text-shadow: 0 0 25px rgba(255, 255, 255, 0.08); 
+    transition: text-shadow 0.3s ease, color 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.logo:hover {
+    color: #fff;
+    text-shadow: 0 0 35px rgba(255, 255, 255, 0.25);
+}
+.logo:hover .custom-lemon-o {
+    transform: scale(1.08) rotate(-5deg); 
+    border-color: #fff;
+}
+
+.custom-l {
+    position: relative;
+    display: inline-block;
+    width: 0.76em;  
+    height: 0.81em;  
+    vertical-align: middle;
+    margin-right: 0.1vw;
+}
+.custom-l::before,
+.custom-l::after {
+    content: "";
+    position: absolute;
+    top: 5%; 
+    width: 0.16em; 
+    height: 95%;
+    background-color: currentColor; 
+    border-radius: 4px;
+    transform-origin: top center;
+}
+.custom-l::before { left: 50%; transform: translateX(-50%) rotate(20deg); }
+.custom-l::after { left: 50%; transform: translateX(-50%) rotate(-20deg); }
+
+.custom-lemon-o {
+    position: relative;
+    display: inline-block;
+    width: 0.85em;
+    height: 0.75em;
+    border: 0.13em solid currentColor;
+    border-radius: 70% 40% 70% 40%; 
+    transform: rotate(15deg); 
+    vertical-align: middle;
+    margin-right: 0.1vw;
+    transition: transform 0.3s var(--bezier), border-color 0.3s ease;
+}
+.custom-lemon-o::before {
+    content: "";
+    position: absolute;
+    top: -0.05em;
+    left: -0.08em;
+    width: 0.12em;
+    height: 0.12em;
+    background-color: currentColor;
+    border-radius: 50%;
+}
+.custom-lemon-o::after {
+    content: "";
+    position: absolute;
+    bottom: -0.05em;
+    right: -0.08em;
+    width: 0.12em;
+    height: 0.12em;
+    background-color: currentColor;
+    border-radius: 50%;
+}
+
+.header-right { grid-column: 3; display: flex; justify-content: flex-end; }
+
+.btn-add {
+    text-decoration: none;
+    background: var(--accent);
+    color: #000;
+    padding: 14px 24px;
+    border-radius: 8px; /* Умеренное закругление */
+    font-weight: 700;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: transform .3s var(--bezier), background-color 0.3s;
+}
+.btn-add:hover { transform: translateY(-2px); background-color: #ffffff; }
+
+.btn-login {
+    text-decoration: none;
+    background: rgba(255, 255, 255, 0.95); 
+    color: #000000; 
+    padding: 14px 35px; 
+    border-radius: 8px; /* Умеренное закругление */
+    font-weight: 700;
+    font-size: 1.1rem; 
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    border: 1px solid rgba(255, 255, 255, 1);
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.4);
+    transition: transform .3s var(--bezier), background-color 0.4s var(--bezier), border-color 0.4s var(--bezier), box-shadow 0.4s var(--bezier), color 0.4s var(--bezier);
+}
+.btn-login:hover {
+    transform: translateY(1px); 
+    background: rgba(255, 255, 255, 0.03); 
+    color: var(--text-main); 
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 0px rgba(255, 255, 255, 0); 
+}
+
+.stage{ flex:1 1 auto; position:relative; min-height:0; overflow:hidden; display: flex; }
+
+/* Сетка карточек категорий */
+.grid-wrap{
+    padding:40px 5%; flex: 1; height:100%; box-sizing:border-box; overflow-y: auto;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; align-content: start;
+}
+.grid-wrap::-webkit-scrollbar { width: 6px; }
+.grid-wrap::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+.item-card{
+    position:relative; overflow:hidden; cursor:pointer; border-radius:12px; background:var(--card-bg); border: 1px solid rgba(255, 255, 255, 0.08); height:420px;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.02), inset 0 0 12px rgba(255, 255, 255, 0.02); opacity: 1; visibility: visible; transform: scale(1);
+    transition: border-color 0.3s, background-color 0.3s, box-shadow 0.3s, opacity 0.35s ease, transform 0.35s var(--bezier), visibility 0.35s;
+    transition-delay: 0s, 0s, 0s, calc(var(--idx) * 0.017s), calc(var(--idx) * 0.017s), calc(var(--idx) * 0.017s);
+}
+/* Класс для скрытия при поиске */
+.item-card.search-hidden {
+    opacity: 0 !important;
+    transform: scale(0.9) !important;
+    pointer-events: none !important;
+    position: absolute !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+.item-card:hover{
+    border-color: rgba(255, 255, 255, 0.25); background-color: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.08), 0 0 10px rgba(255, 255, 255, 0.04), inset 0 0 15px rgba(255, 255, 255, 0.05);
+}
+.item-card:hover .item-img { transform: scale(1.04); filter: grayscale(20%) brightness(0.5); }
+.item-img{
+    position:absolute; top:0;left:0;width:100%;height:300px; background:#15151a; background-size: cover; background-position: center;
+    filter: grayscale(0%) brightness(0.85); transition: transform 0.5s var(--bezier), filter 0.5s ease;
+}
+.item-info{
+    position:absolute; top:300px;left:0;right:0;bottom:0; display:flex;flex-direction:column;justify-content:center;
+    align-items:center;padding:0 20px;text-align:center; background: linear-gradient(to top, rgba(10,10,15,1) 70%, rgba(10,10,15,0));
+}
+.item-title{ font-size:1.4rem;font-weight:700;margin-bottom:5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+.item-meta{color:var(--text-muted);font-size:.9rem;font-weight:300;}
+
+/* ИСПРАВЛЕННЫЙ САЙДБАР: Растягивается на всю высоту */
+.sidebar-target {
+    position: absolute; 
+    top: 40px; 
+    right: 15px; 
+    bottom: 40px; 
+    width: 315px; 
+    display: flex; 
+    flex-direction: column; /* Элементы идут сверху вниз */
+    gap: 8px; 
+    z-index: 10; 
+    visibility: hidden; 
+    pointer-events: none;
+}
+.sidebar-target.active { visibility: visible; pointer-events: auto; }
+.sidebar-item {
+    flex: 1; /* Равномерно распределяет доступную высоту на все 19 категорий */
+    width: 100%; 
+    background-color: rgba(255, 255, 255, 0.02); 
+    border: 1px solid rgba(255, 255, 255, 0.08); 
+    border-radius: 6px;
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    padding: 0 10px; 
+    text-align: center; 
+    cursor: pointer; 
+    opacity: 0; 
+    transform: translateY(15px);
+    transition: transform 0.4s var(--bezier), opacity 0.4s ease, border-color 0.3s, background-color 0.3s, box-shadow 0.3s;
+    transition-delay: calc(var(--idx) * 0.015s);
+}
+.sidebar-target.active .sidebar-item { opacity: 1; transform: translateY(0); }
+.sidebar-target.leaving .sidebar-item { opacity: 0 !important; transform: translateY(15px) !important; transition: none !important; transition-delay: 0s !important; }
+.sidebar-item .sb-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; color: var(--text-main); }
+.sidebar-item.active-category {
+    background-color: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.35); box-shadow: 0 0 25px rgba(255, 255, 255, 0.16), inset 0 0 15px rgba(255, 255, 255, 0.08); transform: translateX(-5px) !important; z-index: 550; transition-delay: 0s !important;
+}
+
+.grid-wrap.hidden-grid .item-card {
+    opacity: 0; visibility: hidden; transform: scale(0.97);
+    transition-delay: 0s, 0s, 0s, calc((var(--max-idx) - var(--idx)) * 0.017s), calc((var(--max-idx) - var(--idx)) * 0.017s), calc((var(--max-idx) - var(--idx)) * 0.017s);
+}
+
+/* Центральная панель товаров */
+.card-ghost {
+    position: fixed; pointer-events: auto; z-index: 400; box-sizing: border-box; background: rgba(7, 7, 12, 0.6); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 0 65px rgba(0, 0, 0, 0.7), inset 0 0 30px rgba(255, 255, 255, 0.03); border-radius: 12px; opacity: 0;
+    transition: left 0.5s var(--bezier), top 0.5s var(--bezier), width 0.5s var(--bezier), height 0.5s var(--bezier), opacity 0.4s ease, border-radius 0.5s var(--bezier);
+}
+.card-ghost.fading-out { opacity: 0 !important; transition: opacity 0.4s ease !important; }
+.card-ghost.fade-in { opacity: 1; border-radius: 12px; }
+
+.products-holder { position: absolute; inset: 20px 0 20px 20px; overflow-y: auto; padding-right: 20px; opacity: 0; transition: opacity 0.25s ease; }
+.card-ghost.fade-in .products-holder { opacity: 1; transition-delay: 0.25s; }
+.products-holder::-webkit-scrollbar { width: 4px; }
+.products-holder::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+
+/* Кнопка Наверх */
+.scroll-top-banner {
+    position: sticky; top: 0; left: 0; width: 100%; height: 34px; z-index: 50; background: rgba(15, 15, 25, 0.65); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: none; border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: var(--text-main); font-weight: 700; font-size: 0.95rem; letter-spacing: 2px; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; margin-bottom: 20px; border-radius: 4px 4px 0 0; opacity: 0; transform: translateY(-100%); pointer-events: none; transition: opacity 0.4s var(--bezier), transform 0.4s var(--bezier), background-color 0.3s;
+}
+.scroll-top-banner.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.scroll-top-banner:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+
+.main-scroll-top-banner {
+    position: fixed; bottom: 0; left: 0; width: 100%; height: 34px; z-index: 90; background: rgba(15, 15, 25, 0.65); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: none; border-top: 1px solid rgba(255, 255, 255, 0.1); color: var(--text-main); font-weight: 700; font-size: 0.95rem; letter-spacing: 2px; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; opacity: 0; transform: translateY(100%); pointer-events: none; transition: opacity 0.4s var(--bezier), transform 0.4s var(--bezier), background-color 0.3s;
+}
+.main-scroll-top-banner.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.main-scroll-top-banner:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+
+.products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(196px, 1fr)); gap: 21px; align-content: start; }
+.product-card { position: relative; overflow: hidden; background: rgba(255, 255, 255, 0.015); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 8px; height: 294px; display: flex; flex-direction: column; opacity: 0; transform: scale(0.96) translateY(8px); }
+.card-ghost.fade-in .product-card { animation: productCardReveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: calc(0.1s + var(--p-delay, 0s)); }
+.product-card:hover { border-color: rgba(255, 255, 255, 0.15); background-color: rgba(255, 255, 255, 0.03); }
+.product-card:hover .prod-img { transform: scale(1.06); filter: brightness(0.45); }
+@keyframes productCardReveal { to { opacity: 1; transform: scale(1) translateY(0); } }
+
+.prod-img { width: 100%; height: 210px; background: #121218; flex-shrink: 0; background-size: cover; background-position: center; background-repeat: no-repeat; filter: brightness(0.85); transition: transform 0.5s var(--bezier), filter 0.5s ease; }
+.prod-info { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 0 14px; text-align: center; background: linear-gradient(to top, rgba(10,10,15,1) 75%, rgba(10,10,15,0)); z-index: 2; }
+.prod-title { font-size: 0.98rem; font-weight: 700; margin-bottom: 3.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; color: #fff;}
+.prod-meta { color: #fff; font-size: 0.75rem; font-weight: 400; opacity: 0.8; background: rgba(255,255,255,0.06); padding: 2px 8px; border-radius: 4px; }
+
+/* Кнопка Назад */
+.back-btn{
+    position:absolute;left:0;top:0;bottom:0;width:54px;z-index:600; display:flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,.02);border:none;border-right:1px solid var(--border); opacity:0;pointer-events:none; 
+    border-radius: 0; transition:opacity .3s ease, background .3s ease;
+}
+.back-btn.visible{opacity:1;pointer-events:auto;}
+.back-btn:hover{background:rgba(255,255,255,.05);}
+.back-btn span{ writing-mode:vertical-rl; transform:rotate(180deg); text-transform:uppercase; letter-spacing:4px; font-size:16.5px; font-weight:300; color:var(--text-muted); }
+</style>
+</head>
+<body>
+
+<div class="container" id="btnContainer" role="dialog" aria-modal="true">
+    <button type="button" class="btn btn-site" onclick="startTransition()">На Сайт</button>
+    <button type="button" class="btn btn-app" onclick="startTransition()">В приложение</button>
+</div>
+
+<main class="main-page" id="mainPage">
+    <div class="grid-bg" aria-hidden="true"></div>
+    <header id="headerBlock">
+        <div class="header-left">
+            <a href="#" class="btn-add" onclick="event.preventDefault()">+ Объявление</a>
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" class="search-input" placeholder="Поиск категории...">
+            </div>
+        </div>
+        
+        <button type="button" class="logo" onclick="location.reload()">
+            <span class="custom-l"></span>ИМ<span class="custom-lemon-o"></span>Н
+        </button>
+        
+        <div class="header-right">
+            <a href="#" class="btn-login" onclick="event.preventDefault()">Войти</a>
+        </div>
+    </header>
+
+    <div class="stage" id="stage">
+        <button type="button" class="back-btn" id="backBtn" onclick="slideBack()">
+            <span>Назад</span>
+        </button>
+
+        <div class="sidebar-target" id="sidebarTarget"></div>
+
+        <div class="grid-wrap" id="gridWrap">
+            </div>
+    </div>
+</main>
+
+<button type="button" class="main-scroll-top-banner" id="mainScrollTopBtn">Наверх ▲</button>
+
+<script>
+(function(){
+'use strict';
+var btnContainer       = document.getElementById('btnContainer');
+var mainPage           = document.getElementById('mainPage');
+var backBtn            = document.getElementById('backBtn');
+var sidebarTarget      = document.getElementById('sidebarTarget');
+var headerBlock        = document.getElementById('headerBlock');
+var gridWrap           = document.getElementById('gridWrap');
+var mainScrollTopBtn   = document.getElementById('mainScrollTopBtn');
+var searchInput        = document.getElementById('searchInput');
+
+var phase = 'idle'; 
+var currentOriginRect = null; 
+
+var generatorConfig = {
+    "Все товары": { imgId: "20", prefixes: ["Умный", "Портативный", "Стильный", "Эко", "Мини"], nouns: ["гаджет", "модуль", "аксессуар", "девайс", "набор"] },
+    "Недвижимость": { imgId: "122", prefixes: ["Уютная", "Просторная", "Современная", "Премиум", "Элитная"], nouns: ["квартира", "студия", "вилла", "резиденция", "лофт"] },
+    "Автомобили": { imgId: "111", prefixes: ["Скоростной", "Гибридный", "Мощный", "Электрический", "Городской"], nouns: ["седан", "кроссовер", "внедорожник", "хэтчбек", "спорткар"] },
+    "Вакансии": { imgId: "0", prefixes: ["Ведущий", "Старший", "Креативный", "Удаленный", "Главный"], nouns: ["специалист", "инженер", "разработчик", "директор", "менеджер"] },
+    "Услуги": { imgId: "367", prefixes: ["Профессиональный", "Качественный", "Срочный", "Эксклюзивный", "Комплексный"], nouns: ["ремонт", "монтаж", "дизайн", "аудит", "сервис"] },
+    "Одежда": { imgId: "21", prefixes: ["Брендовая", "Зимняя", "Спортивная", "Классическая", "Стильная"], nouns: ["куртка", "худи", "обувь", "рубашка", "костюм"] },
+    "Электроника": { imgId: "160", prefixes: ["Игровой", "Ультратонкий", "Беспроводной", "Сенсорный", "Мощный"], nouns: ["ноутбук", "смартфон", "монитор", "наушники", "планшет"] },
+    "Дом и сад": { imgId: "145", prefixes: ["Уютный", "Модульный", "Декоративный", "Садовый", "Мягкий"], nouns: ["диван", "стол", "кресло", "светильник", "шкаф"] },
+    "Красота": { imgId: "431", prefixes: ["Натуральный", "Освежающий", "Увлажняющий", "Питательный", "Омолаживающий"], nouns: ["крем", "тоник", "скраб", "масло", "бальзам"] },
+    "Спорт": { imgId: "429", prefixes: ["Универсальный", "Профессиональный", "Складной", "Эргономичный", "Усиленный"], nouns: ["тренажер", "снаряд", "эспандер", "коврик", "аксессуар"] },
+    "Хобби": { imgId: "447", prefixes: ["Творческий", "Художественный", "Музыкальный", "Развивающий", "Настольный"], nouns: ["набор", "инструмент", "пазл", "альбом", "комплект"] },
+    "Детские товары": { imgId: "1051", prefixes: ["Развивающая", "Интерактивная", "Безопасная", "Деревянная", "Мягкая"], nouns: ["игрушка", "конструктор", "коляска", "кукла", "машинка"] },
+    "Животные": { imgId: "237", prefixes: ["Питательный", "Уютный", "Натуральный", "Автоматический", "Мягкий"], nouns: ["корм", "лежак", "ошейник", "лоток", "аксессуар"] },
+    "Инструменты": { imgId: "534", prefixes: ["Аккумуляторный", "Надежный", "Строительный", "Ударный", "Профессиональный"], nouns: ["шуруповерт", "перфоратор", "набор", "уровень", "лобзик"] },
+    "Продукты": { imgId: "225", prefixes: ["Свежий", "Органический", "Натуральный", "Фермерский", "Ароматный"], nouns: ["кофе", "чай", "шоколад", "сыр", "микс"] },
+    "Для бизнеса": { imgId: "486", prefixes: ["Торговый", "Складской", "Офисный", "Автоматический", "Промышленный"], nouns: ["терминал", "стеллаж", "сейф", "станок", "аппарат"] },
+    "Мототехника": { imgId: "146", prefixes: ["Спортивный", "Кроссовый", "Городской", "Электрический", "Туристический"], nouns: ["мотоцикл", "скутер", "квадроцикл", "байк", "шлем"] },
+    "Водный транспорт": { imgId: "211", prefixes: ["Надувная", "Прогулочный", "Скоростной", "Туристический", "Моторный"], nouns: ["лодка", "катер", "гидроцикл", "каяк", "сапборд"] },
+    "Музыка": { imgId: "281", prefixes: ["Акустическая", "Электронная", "Цифровая", "Профессиональная", "Студийная"], nouns: ["гитара", "синтезатор", "микрофон", "наушники", "акустика"] }
+};
+
+var categoriesOrder = Object.keys(generatorConfig);
+var productsData = {};
+
+categoriesOrder.forEach(function(cat) {
+    productsData[cat] = [];
+    var config = generatorConfig[cat];
+    for (var i = 1; i <= 100; i++) {
+        var pref = config.prefixes[i % config.prefixes.length];
+        var noun = config.nouns[(i + 2) % config.nouns.length];
+        productsData[cat].push(pref + " " + noun + " #" + i);
+    }
+});
+
+function buildMainGrid() {
+    gridWrap.innerHTML = '';
+    categoriesOrder.forEach(function(cat, idx) {
+        var card = document.createElement('div');
+        card.className = 'item-card';
+        card.style.setProperty('--idx', idx);
+        card.setAttribute('onclick', "handleCardClick(this, '" + cat + "')");
+        card.setAttribute('data-category', cat.toLowerCase());
+
+        var img = document.createElement('div');
+        img.className = 'item-img';
+        img.style.backgroundImage = "url('https://picsum.photos/id/" + generatorConfig[cat].imgId + "/600/400')";
+
+        var info = document.createElement('div');
+        info.className = 'item-info';
+
+        var title = document.createElement('div');
+        title.className = 'item-title';
+        title.textContent = cat;
+
+        var meta = document.createElement('div');
+        meta.className = 'item-meta';
+        meta.textContent = "100 объявлений";
+
+        info.appendChild(title);
+        info.appendChild(meta);
+        card.appendChild(img);
+        card.appendChild(info);
+        gridWrap.appendChild(card);
+    });
+}
+buildMainGrid();
+
+function buildSidebar() {
+    sidebarTarget.innerHTML = '';
+    categoriesOrder.forEach(function(cat, i){
+        var item = document.createElement('div');
+        item.className = 'sidebar-item';
+        item.style.setProperty('--idx', i);
+        item.onclick = function() { if(phase === 'modal') { switchCategory(cat); } };
+        
+        var title = document.createElement('div');
+        title.className = 'sb-title';
+        title.textContent = cat;
+        
+        item.appendChild(title);
+        sidebarTarget.appendChild(item);
+    });
+}
+buildSidebar();
+
+/* Логика Живого Поиска */
+searchInput.addEventListener('input', function(e) {
+    var value = e.target.value.toLowerCase().trim();
+    var cards = gridWrap.querySelectorAll('.item-card');
+    
+    cards.forEach(function(card) {
+        var catName = card.getAttribute('data-category');
+        if (catName.indexOf(value) !== -1) {
+            card.classList.remove('search-hidden');
+        } else {
+            card.classList.add('search-hidden');
+        }
+    });
+});
+
+gridWrap.addEventListener('scroll', function() {
+    if (phase === 'idle' && gridWrap.scrollTop > 150) {
+        mainScrollTopBtn.classList.add('visible');
+    } else {
+        mainScrollTopBtn.classList.remove('visible');
+    }
+});
+
+mainScrollTopBtn.addEventListener('click', function() {
+    gridWrap.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+function initScrollBanner(holder, banner) {
+    holder.addEventListener('scroll', function() {
+        if (holder.scrollTop > 150) { 
+            banner.classList.add('visible');
+        } else {
+            banner.classList.remove('visible');
+        }
+    });
+    banner.addEventListener('click', function() {
+        holder.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+}
+
+window.startTransition = function() {
+    btnContainer.classList.add('hidden');
+    mainPage.classList.add('visible');
+};
+
+window.handleCardClick = function(card, categoryName) {
+    if (phase !== 'idle') return;
+    phase = 'animating';
+
+    mainScrollTopBtn.classList.remove('visible');
+    currentOriginRect = card.getBoundingClientRect();
+    var headerRect = headerBlock.getBoundingClientRect();
+
+    var ghost = document.createElement('div');
+    ghost.className = 'card-ghost';
+    ghost.style.left = currentOriginRect.left + 'px';
+    ghost.style.top = currentOriginRect.top + 'px';
+    ghost.style.width = currentOriginRect.width + 'px';
+    ghost.style.height = currentOriginRect.height + 'px';
+    document.body.appendChild(ghost);
+
+    var holder = document.createElement('div');
+    holder.className = 'products-holder';
+
+    var topBanner = document.createElement('button');
+    topBanner.type = 'button';
+    topBanner.className = 'scroll-top-banner';
+    topBanner.innerHTML = 'Наверх ▲';
+    holder.appendChild(topBanner);
+
+    var grid = document.createElement('div');
+    grid.className = 'products-grid';
+    
+    var items = productsData[categoryName] || [];
+    var baseImgId = generatorConfig[categoryName].imgId;
+
+    items.forEach(function(pName, idx){
+        var pCard = document.createElement('div');
+        pCard.className = 'product-card';
+        pCard.style.setProperty('--p-delay', (Math.min(idx, 15) * 0.02) + 's');
+        
+        var img = document.createElement('div');
+        img.className = 'prod-img';
+        
+        var finalImgId = parseInt(baseImgId) + (idx % 5);
+        img.style.backgroundImage = "url('https://picsum.photos/id/" + finalImgId + "/300/250')";
+        
+        var info = document.createElement('div');
+        info.className = 'prod-info';
+        
+        var title = document.createElement('div');
+        title.className = 'prod-title';
+        title.textContent = pName;
+        
+        var meta = document.createElement('div');
+        meta.className = 'prod-meta';
+        meta.textContent = (1500 + (idx * 250)) + " ₽";
+        
+        info.appendChild(title);
+        info.appendChild(meta);
+        pCard.appendChild(img);
+        pCard.appendChild(info);
+        grid.appendChild(pCard);
+    });
+    
+    holder.appendChild(grid);
+    ghost.appendChild(holder);
+
+    initScrollBanner(holder, topBanner);
+    gridWrap.classList.add('hidden-grid');
+
+    var targetLeft = 54 + 30; 
+    var targetTop = headerRect.height + 40;
+    var targetWidth = window.innerWidth - targetLeft - 315 - 45; 
+    var targetHeight = window.innerHeight - targetTop - 40;
+
+    ghost.getBoundingClientRect();
+    ghost.classList.add('fade-in');
+    ghost.style.left = targetLeft + 'px';
+    ghost.style.top = targetTop + 'px';
+    ghost.style.width = targetWidth + 'px';
+    ghost.style.height = targetHeight + 'px';
+
+    setTimeout(function(){
+        backBtn.classList.add('visible');
+        sidebarTarget.classList.add('active');
+        highlightSidebar(categoryName);
+        phase = 'modal';
+    }, 500);
+};
+
+window.slideBack = function() {
+    if (phase !== 'modal') return;
+    phase = 'animating';
+
+    var ghost = document.querySelector('.card-ghost');
+    backBtn.classList.remove('visible');
+    sidebarTarget.classList.add('leaving');
+    sidebarTarget.classList.remove('active');
+
+    var activeBanner = document.querySelector('.scroll-top-banner');
+    if(activeBanner) activeBanner.classList.remove('visible');
+
+    setTimeout(function(){
+        sidebarTarget.classList.remove('leaving');
+        var items = sidebarTarget.querySelectorAll('.sidebar-item');
+        items.forEach(function(el){ el.classList.remove('active-category'); });
+    }, 400);
+
+    if (ghost && currentOriginRect) {
+        ghost.classList.remove('fade-in');
+        ghost.style.left = currentOriginRect.left + 'px';
+        ghost.style.top = currentOriginRect.top + 'px';
+        ghost.style.width = currentOriginRect.width + 'px';
+        ghost.style.height = currentOriginRect.height + 'px';
+    }
+
+    setTimeout(function(){ gridWrap.classList.remove('hidden-grid'); }, 150);
+
+    setTimeout(function(){
+        if (ghost) ghost.remove();
+        phase = 'idle';
+        if (gridWrap.scrollTop > 150) { mainScrollTopBtn.classList.add('visible'); }
+    }, 500);
+};
+
+function highlightSidebar(categoryName) {
+    var items = sidebarTarget.querySelectorAll('.sidebar-item');
+    items.forEach(function(el){
+        var t = el.querySelector('.sb-title').textContent;
+        if (t === categoryName) { el.classList.add('active-category'); } 
+        else { el.classList.remove('active-category'); }
+    });
+}
+
+function switchCategory(categoryName) {
+    var ghost = document.querySelector('.card-ghost');
+    if (!ghost) return;
+    
+    highlightSidebar(categoryName);
+    var holder = ghost.querySelector('.products-holder');
+    
+    if (holder) {
+        holder.style.opacity = '0';
+        setTimeout(function(){
+            holder.remove();
+            
+            var newHolder = document.createElement('div');
+            newHolder.className = 'products-holder';
+
+            var topBanner = document.createElement('button');
+            topBanner.type = 'button';
+            topBanner.className = 'scroll-top-banner';
+            topBanner.innerHTML = 'Наверх ▲';
+            newHolder.appendChild(topBanner);
+
+            var grid = document.createElement('div');
+            grid.className = 'products-grid';
+            
+            var items = productsData[categoryName] || [];
+            var baseImgId = generatorConfig[categoryName].imgId;
+
+            items.forEach(function(pName, idx){
+                var pCard = document.createElement('div');
+                pCard.className = 'product-card';
+                pCard.style.setProperty('--p-delay', (Math.min(idx, 15) * 0.015) + 's');
+                
+                var img = document.createElement('div');
+                img.className = 'prod-img';
+                var finalImgId = parseInt(baseImgId) + (idx % 5);
+                img.style.backgroundImage = "url('https://picsum.photos/id/" + finalImgId + "/300/250')";
+                
+                var info = document.createElement('div');
+                info.className = 'prod-info';
+                
+                var title = document.createElement('div');
+                title.className = 'prod-title';
+                title.textContent = pName;
+                
+                var meta = document.createElement('div');
+                meta.className = 'prod-meta';
+                meta.textContent = (1200 + (idx * 180)) + " ₽";
+                
+                info.appendChild(title);
+                info.appendChild(meta);
+                pCard.appendChild(img);
+                pCard.appendChild(info);
+                grid.appendChild(pCard);
+            });
+            
+            newHolder.appendChild(grid);
+            ghost.appendChild(newHolder);
+            
+            initScrollBanner(newHolder, topBanner);
+            newHolder.scrollTop = 0;
+            newHolder.getBoundingClientRect();
+            newHolder.style.opacity = '1';
+        }, 250);
+    }
+}
+}());
+</script>
+
+</body>
+</html>
