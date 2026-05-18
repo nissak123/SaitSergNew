@@ -420,7 +420,7 @@ header{
             <a href="#" class="btn-add" onclick="event.preventDefault()">+ Объявление</a>
             <div class="search-container">
                 <span class="search-icon">🔍</span>
-                <input type="text" id="searchInput" class="search-input" placeholder="Поиск категории...">
+                <input type="text" id="searchInput" class="search-input" placeholder="Поиск товаров..." autocomplete="off">
             </div>
         </div>
         
@@ -548,19 +548,52 @@ function buildSidebar() {
 }
 buildSidebar();
 
-/* Логика Живого Поиска */
-searchInput.addEventListener('input', function(e) {
-    var value = e.target.value.toLowerCase().trim();
-    var cards = gridWrap.querySelectorAll('.item-card');
-    
-    cards.forEach(function(card) {
-        var catName = card.getAttribute('data-category');
-        if (catName.indexOf(value) !== -1) {
-            card.classList.remove('search-hidden');
-        } else {
-            card.classList.add('search-hidden');
+/* Логика Поиска по Товарам (после подтверждения Enter) */
+var searchTimeout = null;
+searchInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        var value = searchInput.value.toLowerCase().trim();
+        
+        if (!value) {
+            // Если поиск пустой - показываем все карточки
+            var cards = gridWrap.querySelectorAll('.item-card');
+            cards.forEach(function(card) {
+                card.classList.remove('search-hidden');
+            });
+            return;
         }
-    });
+        
+        // Скрываем все карточки сначала
+        var cards = gridWrap.querySelectorAll('.item-card');
+        cards.forEach(function(card) {
+            card.classList.add('search-hidden');
+        });
+        
+        // Ищем совпадения во всех товарах всех категорий
+        categoriesOrder.forEach(function(cat) {
+            var items = productsData[cat] || [];
+            items.forEach(function(pName) {
+                if (pName.toLowerCase().indexOf(value) !== -1) {
+                    // Нашли товар - показываем карточку категории
+                    var catCard = gridWrap.querySelector('.item-card[data-category="' + cat.toLowerCase() + '"]');
+                    if (catCard) {
+                        catCard.classList.remove('search-hidden');
+                    }
+                }
+            });
+        });
+    }
+});
+
+// Очистка поиска при клике на крестик или ручном очищении
+searchInput.addEventListener('input', function(e) {
+    if (e.target.value.trim() === '') {
+        var cards = gridWrap.querySelectorAll('.item-card');
+        cards.forEach(function(card) {
+            card.classList.remove('search-hidden');
+        });
+    }
 });
 
 gridWrap.addEventListener('scroll', function() {
