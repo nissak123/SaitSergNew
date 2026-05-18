@@ -508,7 +508,7 @@ function buildMainGrid() {
 
         var img = document.createElement('div');
         img.className = 'item-img';
-        img.style.backgroundImage = "url('https://picsum.photos/id/" + generatorConfig[cat].imgId + "/600/400')";
+        img.style.backgroundImage = "url('https://placehold.co/600x400/1a1a2e/FFF?text=" + encodeURIComponent(cat) + "')";
 
         var info = document.createElement('div');
         info.className = 'item-info';
@@ -632,8 +632,7 @@ window.handleCardClick = function(card, categoryName) {
         var img = document.createElement('div');
         img.className = 'prod-img';
         
-        var finalImgId = parseInt(baseImgId) + (idx % 5);
-        img.style.backgroundImage = "url('https://picsum.photos/id/" + finalImgId + "/300/250')";
+        img.style.backgroundImage = "url('https://placehold.co/300x250/1a1a2e/FFF?text=" + encodeURIComponent(pName) + "')";
         
         var info = document.createElement('div');
         info.className = 'prod-info';
@@ -757,8 +756,7 @@ function switchCategory(categoryName) {
                 
                 var img = document.createElement('div');
                 img.className = 'prod-img';
-                var finalImgId = parseInt(baseImgId) + (idx % 5);
-                img.style.backgroundImage = "url('https://picsum.photos/id/" + finalImgId + "/300/250')";
+                img.style.backgroundImage = "url('https://placehold.co/300x250/1a1a2e/FFF?text=" + encodeURIComponent(pName) + "')";
                 
                 var info = document.createElement('div');
                 info.className = 'prod-info';
