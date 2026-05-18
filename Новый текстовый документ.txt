@@ -554,37 +554,96 @@ searchInput.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {
         e.preventDefault();
         var value = searchInput.value.toLowerCase().trim();
-        
+
         if (!value) {
-            // Если поиск пустой - показываем все карточки
-            var cards = gridWrap.querySelectorAll('.item-card');
-            cards.forEach(function(card) {
-                card.classList.remove('search-hidden');
+            // Если поиск пустой - показываем все карточки категорий
+            gridWrap.innerHTML = '';
+            categoriesOrder.forEach(function(cat){
+                var card = document.createElement('div');
+                card.className = 'item-card';
+                card.setAttribute('data-category', cat.toLowerCase());
+                card.onclick = function(){ handleCardClick(this, cat); };
+
+                var img = document.createElement('div');
+                img.className = 'card-img';
+                img.style.backgroundImage = "url('https://placehold.co/600x400/1a1a2e/FFF?text=" + encodeURIComponent(cat) + "')";
+
+                var title = document.createElement('div');
+                title.className = 'card-title';
+                title.textContent = cat;
+
+                card.appendChild(img);
+                card.appendChild(title);
+                gridWrap.appendChild(card);
             });
             return;
         }
-        
-        // Скрываем все карточки сначала
-        var cards = gridWrap.querySelectorAll('.item-card');
-        cards.forEach(function(card) {
-            card.classList.add('search-hidden');
-        });
-        
+
+        // Очищаем сетку и показываем только найденные товары как мини-карточки
+        gridWrap.innerHTML = '';
+        var foundAny = false;
+
         // Ищем совпадения во всех товарах всех категорий
         categoriesOrder.forEach(function(cat) {
             var items = productsData[cat] || [];
             items.forEach(function(pName) {
                 if (pName.toLowerCase().indexOf(value) !== -1) {
-                    // Нашли товар - показываем карточку категории
-                    var catCard = gridWrap.querySelector('.item-card[data-category="' + cat.toLowerCase() + '"]');
-                    if (catCard) {
-                        catCard.classList.remove('search-hidden');
-                    }
+                    foundAny = true;
+                    // Создаем мини-карточку товара
+                    var productCard = document.createElement('div');
+                    productCard.className = 'item-card product-search-result';
+                    productCard.onclick = function() {
+                        // Находим и кликаем на карточку категории
+                        var catCard = gridWrap.querySelector('.item-card[data-category="' + cat.toLowerCase() + '"]');
+                        if (catCard) {
+                            handleCardClick(catCard, cat);
+                            // После открытия категории, находим конкретный товар
+                            setTimeout(function() {
+                                var holder = document.querySelector('.products-holder');
+                                if (holder) {
+                                    var allProductCards = holder.querySelectorAll('.product-card');
+                                    allProductCards.forEach(function(pc) {
+                                        var titleEl = pc.querySelector('.prod-title');
+                                        if (titleEl && titleEl.textContent === pName) {
+                                            pc.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                            pc.style.boxShadow = '0 0 20px rgba(255,255,255,0.5)';
+                                            setTimeout(function() {
+                                                pc.style.boxShadow = '';
+                                            }, 2000);
+                                        }
+                                    });
+                                }
+                            }, 600);
+                        }
+                    };
+
+                    var img = document.createElement('div');
+                    img.className = 'card-img';
+                    img.style.backgroundImage = "url('https://placehold.co/300x250/1a1a2e/FFF?text=" + encodeURIComponent(pName) + "')";
+
+                    var title = document.createElement('div');
+                    title.className = 'card-title';
+                    title.textContent = pName;
+
+                    var categoryLabel = document.createElement('div');
+                    categoryLabel.className = 'card-category-label';
+                    categoryLabel.textContent = cat;
+                    categoryLabel.style.cssText = 'font-size: 12px; color: var(--text-muted); margin-top: 5px;';
+
+                    productCard.appendChild(img);
+                    productCard.appendChild(title);
+                    productCard.appendChild(categoryLabel);
+                    gridWrap.appendChild(productCard);
                 }
             });
         });
+
+        if (!foundAny) {
+            gridWrap.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:18px;">Товары не найдены</div>';
+        }
     }
 });
+
 
 // Очистка поиска при клике на крестик или ручном очищении
 searchInput.addEventListener('input', function(e) {
